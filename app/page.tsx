@@ -1,65 +1,110 @@
-import Image from "next/image";
+import Hero from '@/component/shared/Hero';
+import { ServiceCard } from '@/component/cards/ServiceCard';
+import { BlogCard } from '@/component/cards/BlogCard';
+import prisma from '@/lib/db';
+import Link from 'next/link';
+import { TestimonialCard } from "@/component/cards/TestimonialCard";
 
-export default function Home() {
+export default async function HomePage() {
+  // Fetch services from Database
+  const services = await prisma.service.findMany();
+
+  // Fetch latest blog posts
+  const posts = await prisma.post.findMany({
+    take: 3,
+    orderBy: { createdAt: 'desc' },
+    include: { author: true }
+  });
+
+  // Fetch Testimonials
+  const reviews = await prisma.review.findMany({
+    take: 6,
+    orderBy: {
+      id: 'desc' 
+    }
+  });
+  
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+      <Hero />
+      
+      <section className="py-20 bg-[#0a0a0a]">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Our Services</h2>
+              <p className="text-gray-400">Tailored solutions for your digital growth.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {services.length > 0 ? (
+              services.map((service) => (
+                <ServiceCard 
+                  key={service.id}
+                  id={service.id.toString()} // Convert to string
+                  title={service.title} 
+                  price={parseFloat(service.price || '0')} // Convert to number
+                  description={service.description}
+                />
+              ))
+            ) : (
+              <p className="text-gray-400">No services found. Please seed your database.</p>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="py-20 bg-[#111111]">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Latest Blog Posts</h2>
+              <p className="text-gray-400">Stay updated with our latest insights and tutorials.</p>
+            </div>
+            <Link href="/blog" className="text-blue-400 hover:text-blue-300 transition-colors">
+              View All →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <BlogCard key={post.id} post={post} />
+              ))
+            ) : (
+              <p className="text-gray-400">No blog posts found. Check back later!</p>
+            )}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+      
+      <section className="py-20 bg-[#0a0a0a]">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              What Our <span className="text-blue-500">Clients</span> Say
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Trusted by developers and businesses worldwide for high-quality technical solutions.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-10">
+            {reviews.map((r) => (
+              <TestimonialCard 
+                key={r.id}
+                name={r.user}    
+                review={r.comment} 
+                rating={r.rating}  
+                serviceId={r.product}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+      
+    </main>
   );
 }
